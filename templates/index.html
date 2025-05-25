@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CareBot</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-mode">
+  <div class="chat-wrapper">
+    <h1>🤖 <span class="logo-text">CareBot</span></h1>
+
+    <div id="chat-box" class="chat-box"></div>
+
+    <form id="chat-form">
+      <input type="text" id="user-input" placeholder="Ask me anything..." autocomplete="off" />
+      <button type="submit">➤</button>
+    </form>
+
+    <button id="clear-history-btn">🧹 Clear Chat</button>
+  </div>
+
+  <script>
+    const chatForm = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
+    const chatBox = document.getElementById('chat-box');
+    const clearBtn = document.getElementById('clear-history-btn');
+
+    // Add messages to chat box
+    function addMessage(message, sender) {
+      const messageEl = document.createElement('div');
+      messageEl.className = `chat-message ${sender}`;
+      messageEl.textContent = message;
+      chatBox.appendChild(messageEl);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Send message to server
+    async function sendMessage(message) {
+      addMessage(message, 'user');
+
+      try {
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message }),
+        });
+
+        const data = await response.json();
+        addMessage(data.response, 'bot');
+      } catch (err) {
+        addMessage("⚠️ Server error. Try again later.", 'bot');
+      }
+    }
+
+    // Handle form submit
+    chatForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const message = userInput.value.trim();
+      if (message) {
+        sendMessage(message);
+        userInput.value = '';
+      }
+    });
+
+    // Clear chat history
+    clearBtn.addEventListener('click', () => {
+      chatBox.innerHTML = '';
+    });
+  </script>
+</body>
+</html>
